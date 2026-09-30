@@ -28,6 +28,17 @@ class Settings(BaseSettings):
     DEMO_TENANT_ID: str = "demo_sandbox"
     TENANT_HEADER_NAME: str = "X-Tenant-ID"
 
+    # Real, durable store for this service's own domain writes (vehicles) —
+    # see app/db/. SQLite by default for zero-setup dev/test; point this at
+    # a Postgres DSN (and install `asyncpg`) for staging/production.
+    DATABASE_URL: str = "sqlite+aiosqlite:///./nexus_fleet.db"
+
+    # Where every real write in this service reports its state-changing
+    # action, per the project's audit-trail requirement — see
+    # app/services/fleet/audit_client.py.
+    AUDIT_SERVICE_URL: str = "http://localhost:8007"
+    AUDIT_SERVICE_TIMEOUT_SECONDS: float = 3.0
+
 
 @lru_cache
 def get_settings() -> Settings:

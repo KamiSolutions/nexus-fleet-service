@@ -4,3 +4,15 @@ pydantic>=2.7
 pydantic-settings>=2.3
 pyjwt[crypto]>=2.8
 python-multipart>=0.0.9
+
+# Real DB-backed vehicle writes (app/db/) — SQLite via aiosqlite for
+# zero-setup local dev/test; swap DATABASE_URL to a Postgres DSN and
+# install asyncpg for staging/production.
+sqlalchemy[asyncio]>=2.0
+aiosqlite>=0.20
+
+# Two real needs as of this round: app/services/fleet/audit_client.py makes
+# real outbound calls to nexus-audit-service, and fastapi.testclient.TestClient
+# needs a real httpx transport under recent starlette releases (the same
+# latent CI gap already fixed in the other services).
+httpx>=0.27
