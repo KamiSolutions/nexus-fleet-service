@@ -62,7 +62,9 @@ async def list_vehicles(*, tenant_id: str) -> list[VehicleOut]:
         return [_to_out(row) for row in result.scalars().all()]
 
 
-async def create_vehicle(payload: VehicleCreate, *, tenant_id: str, token: str) -> VehicleWriteResult:
+async def create_vehicle(
+    payload: VehicleCreate, *, tenant_id: str, actor_user_id: str, actor_role: str | None
+) -> VehicleWriteResult:
     now = datetime.now(timezone.utc)
     row = VehicleModel(
         id=str(uuid.uuid4()),
@@ -81,7 +83,8 @@ async def create_vehicle(payload: VehicleCreate, *, tenant_id: str, token: str) 
     async with httpx.AsyncClient(timeout=settings.AUDIT_SERVICE_TIMEOUT_SECONDS) as client:
         audit_status, audit_detail = await record_audit_event(
             client,
-            token=token,
+            actor_user_id=actor_user_id,
+            actor_role=actor_role,
             tenant_id=tenant_id,
             action="vehicle.created",
             resource_type="vehicle",
@@ -97,7 +100,8 @@ async def update_vehicle(
     payload: VehicleUpdate,
     *,
     tenant_id: str,
-    token: str,
+    actor_user_id: str,
+    actor_role: str | None,
 ) -> VehicleWriteResult:
     async with AsyncSessionLocal() as session:
         row = await session.get(VehicleModel, vehicle_id)
@@ -124,7 +128,8 @@ async def update_vehicle(
     async with httpx.AsyncClient(timeout=settings.AUDIT_SERVICE_TIMEOUT_SECONDS) as client:
         audit_status, audit_detail = await record_audit_event(
             client,
-            token=token,
+            actor_user_id=actor_user_id,
+            actor_role=actor_role,
             tenant_id=tenant_id,
             action="vehicle.updated",
             resource_type="vehicle",
@@ -135,7 +140,9 @@ async def update_vehicle(
     return VehicleWriteResult(vehicle=out, audit=audit_status, audit_detail=audit_detail)
 
 
-async def delete_vehicle(vehicle_id: str, *, tenant_id: str, token: str) -> VehicleDeleteResult:
+async def delete_vehicle(
+    vehicle_id: str, *, tenant_id: str, actor_user_id: str, actor_role: str | None
+) -> VehicleDeleteResult:
     async with AsyncSessionLocal() as session:
         row = await session.get(VehicleModel, vehicle_id)
         if row is None or row.tenant_id != tenant_id:
@@ -146,7 +153,8 @@ async def delete_vehicle(vehicle_id: str, *, tenant_id: str, token: str) -> Vehi
     async with httpx.AsyncClient(timeout=settings.AUDIT_SERVICE_TIMEOUT_SECONDS) as client:
         audit_status, audit_detail = await record_audit_event(
             client,
-            token=token,
+            actor_user_id=actor_user_id,
+            actor_role=actor_role,
             tenant_id=tenant_id,
             action="vehicle.deleted",
             resource_type="vehicle",

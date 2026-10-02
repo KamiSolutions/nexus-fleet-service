@@ -39,6 +39,12 @@ class Settings(BaseSettings):
     AUDIT_SERVICE_URL: str = "http://localhost:8007"
     AUDIT_SERVICE_TIMEOUT_SECONDS: float = 3.0
 
+    # Shared static credential sent on the X-Service-Key header when
+    # this service POSTs an audit event — MUST equal
+    # nexus-audit-service's own AUDIT_SERVICE_API_KEY, same lockstep
+    # requirement as JWT_SECRET_KEY. See audit_client.py.
+    AUDIT_SERVICE_API_KEY: str = "CHANGE_ME_IN_ENV"  # noqa: S105
+
 
 @lru_cache
 def get_settings() -> Settings:

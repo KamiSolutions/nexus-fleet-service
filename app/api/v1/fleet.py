@@ -27,7 +27,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Security, status
 
-from app.dependencies.auth import get_current_user, oauth2_scheme
+from app.dependencies.auth import get_current_user
 from app.dependencies.tenant import get_tenant_context
 from app.schemas.auth import CurrentUser
 from app.schemas.fleet import (
@@ -98,10 +98,13 @@ async def write_new_vehicle(
     payload: VehicleCreate,
     tenant: TenantContext = Depends(get_tenant_context),
     current_user: CurrentUser = Security(get_current_user, scopes=["vehicles:create"]),
-    token: str = Depends(oauth2_scheme),
 ) -> VehicleWriteResult:
-    del current_user
-    return await create_vehicle(payload, tenant_id=tenant.tenant_id, token=token)
+    return await create_vehicle(
+        payload,
+        tenant_id=tenant.tenant_id,
+        actor_user_id=current_user.user_id,
+        actor_role=current_user.role,
+    )
 
 
 @router.put(
@@ -114,10 +117,14 @@ async def write_vehicle_update(
     payload: VehicleUpdate,
     tenant: TenantContext = Depends(get_tenant_context),
     current_user: CurrentUser = Security(get_current_user, scopes=["vehicles:manage"]),
-    token: str = Depends(oauth2_scheme),
 ) -> VehicleWriteResult:
-    del current_user
-    return await update_vehicle(vehicle_id, payload, tenant_id=tenant.tenant_id, token=token)
+    return await update_vehicle(
+        vehicle_id,
+        payload,
+        tenant_id=tenant.tenant_id,
+        actor_user_id=current_user.user_id,
+        actor_role=current_user.role,
+    )
 
 
 @router.delete(
@@ -129,7 +136,10 @@ async def write_vehicle_delete(
     vehicle_id: str,
     tenant: TenantContext = Depends(get_tenant_context),
     current_user: CurrentUser = Security(get_current_user, scopes=["vehicles:manage"]),
-    token: str = Depends(oauth2_scheme),
 ) -> VehicleDeleteResult:
-    del current_user
-    return await delete_vehicle(vehicle_id, tenant_id=tenant.tenant_id, token=token)
+    return await delete_vehicle(
+        vehicle_id,
+        tenant_id=tenant.tenant_id,
+        actor_user_id=current_user.user_id,
+        actor_role=current_user.role,
+    )
